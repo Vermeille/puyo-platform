@@ -99,7 +99,7 @@ class Game {
         puyo2_ = Puyo::Green;
         puyo_config_ = PuyoConfig::Left;
         puyo_x_ = 3;
-        puyo_y_ = 15;
+        puyo_y_ = 14;
     }
 
     void RotateRight() {
@@ -313,5 +313,39 @@ class Game {
             }
         }
         return exploded;
+    }
+
+    int ProcessCollisions() {
+        AddPuyos();
+        ProcessFalls();
+        int total_combo = 0;
+        int explosions = 0;
+        while ((explosions = Explode()) != 0) {
+            total_combo += explosions;
+            ProcessFalls();
+        }
+        ReinitPuyo();
+        return total_combo;
+    }
+
+    int puyo_x() const { return puyo_x_; }
+    int puyo_y() const { return puyo_y_; }
+    Puyo puyo1() const { return puyo1_; }
+    Puyo puyo2() const { return puyo2_; }
+    PuyoConfig puyo_config() const { return puyo_config_; }
+
+    std::string puyo_config_as_str() const {
+        switch (puyo_config_) {
+            case PuyoConfig::Up:
+                return "UP";
+            case PuyoConfig::Right:
+                return "RIGHT";
+            case PuyoConfig::Down:
+                return "DOWN";
+            case PuyoConfig::Left:
+                return "LEFT";
+            default:
+                assert(false);
+        }
     }
 };
