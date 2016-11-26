@@ -40,6 +40,8 @@ class GameFull {
     int down_cooldown_;
 
    public:
+    GameFull& operator=(const GameFull&) = default;
+
     GameFull() : down_cooldown_(3) {}
 
     void GameMakeTurn(std::string cmd) {
@@ -95,43 +97,140 @@ class GameFull {
         oss << "\n";
         return oss.str();
     }
+    std::string PrintGameHTML() const {
+        if (g_.HasLost()) {
+            return "YOU_LOST";
+        }
+
+        auto grid = g_.Print();
+        grid[g_.puyo_x()][g_.puyo_y()] = PuyoToChar(g_.puyo1());
+        if (g_.puyo_config() == Game::PuyoConfig::Up) {
+            grid[g_.puyo_x()][g_.puyo_y() + 1] = PuyoToChar(g_.puyo2());
+        } else if (g_.puyo_config() == Game::PuyoConfig::Down) {
+            grid[g_.puyo_x()][g_.puyo_y() - 1] = PuyoToChar(g_.puyo2());
+        } else if (g_.puyo_config() == Game::PuyoConfig::Left) {
+            grid[g_.puyo_x() - 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
+        } else {
+            grid[g_.puyo_x() + 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
+        }
+
+        using namespace httpi::html;
+        Html html;
+        html << Table();
+
+        for (int i = 0; i < GRID_LINES; ++i) {
+            html << Tr();
+            html << Td().Attr("style", "width:32px;height:32px")
+                 << "<img src=\"http://files.vermeille.fr/puyo/"
+                    "puyoWall.png\"/>";
+            html << Close();
+            for (int j = 0; j < GRID_COLS; ++j) {
+                html << Td().Attr("style", "width:32px;height:32px");
+                std::string url =
+                    "<img src=\"http://files.vermeille.fr/puyo/puyo";
+                url.push_back(grid[j][GRID_LINES - i - 1]);
+                url += ".png\"/>";
+
+                html << url;
+                html << Close();
+            }
+            html << Td().Attr("style", "width:32px;height:32px");
+            html << "<img src=\"http://files.vermeille.fr/puyo/"
+                    "puyoWall.png\"/>";
+            html << Close();
+            html << Close();
+        }
+
+        html << Close();
+        return html.Get();
+    }
 };
 
 int main() {
     InitHttpInterface();
-    GameFull g;
+    std::map<std::string, GameFull> games;
 
     RegisterUrl("/turn",
                 httpi::RestPageMaker(MakePage).AddResource(
                     "GET",
                     httpi::RestResource(
-                        httpi::html::FormDescriptor<std::string>{
+                        httpi::html::FormDescriptor<std::string, std::string>{
                             "GET",
                             "/turn",
                             "Make your next move",  // name
                             "Make your next move. LEFT, DOWN, RIGHT, ROTL or "
                             "ROTR",  // longer description
-                            {{"move", "text", "your move choice"}}},
-                        [&](std::string cmd) {
-                            if (g.HasLost()) {
-                                return 0;
+                            {{"move", "text", "Your move choice"},
+                             {"name", "text", "Your game's name"}}},
+                        [&](std::string cmd, std::string name) -> GameFull* {
+                            auto found = games.find(name);
+                            if (found == games.end()) {
+                                return nullptr;
                             }
-                            g.GameMakeTurn(cmd);
-                            return 0;
+                            GameFull* g = &found->second;
+                            if (g->HasLost()) {
+                                return g;
+                            }
+                            g->GameMakeTurn(cmd);
+                            return g;
                         },
-                        [&](int) -> std::string {
-                            using namespace httpi::html;
-                            if (g.HasLost()) {
+                        [&](const GameFull* g) -> std::string {
+                            if (!g) {
+                                return "Your game wasn't found";
+                            }
+                            if (g->HasLost()) {
                                 return "LOST";
                             }
-                            return (Html() << Tag("pre") << g.PrintGame()
-                                           << Close())
-                                .Get();
+                            return g->PrintGameHTML();
                         },
-                        [&](int) { return g.PrintGame(); })));
+                        [&](const GameFull* g) -> std::string {
+                            if (!g) {
+                                return "ERROR";
+                            }
+                            if (g->HasLost()) {
+                                return "LOST";
+                            }
+                            return g->PrintGame();
+                        })));
 
-    ServiceLoopForever();  // infinite loop ending only on SIGINT / SIGTERM /
-                           // SIGKILL
+    RegisterUrl(
+        "/new",
+        httpi::RestPageMaker(MakePage).AddResource(
+            "GET",
+            httpi::RestResource(
+                httpi::html::FormDescriptor<std::string>{
+                    "GET",
+                    "/new",
+                    "Create a new Game",
+                    "Name your game with a unique single-word token",
+                    {{"name", "text", "Your game's name"}}},
+                [&](std::string name) {
+                    auto found = games.find(name);
+                    if (found != games.end() && !found->second.HasLost()) {
+                        return false;
+                    }
+                    games[name] = GameFull();
+                    return true;
+                },
+                [](bool success) {
+                    if (success) {
+                        return (httpi::html::Html()
+                                << "Game created successfully")
+                            .Get();
+                    } else {
+                        return (httpi::html::Html() << "This name is invalid")
+                            .Get();
+                    }
+                },
+                [](bool success) {
+                    if (success) {
+                        return "OK";
+                    } else {
+                        return "ERROR";
+                    }
+                })));
+
+    ServiceLoopForever();
 
     StopHttpInterface();  // clear resources<Paste>
     return 0;

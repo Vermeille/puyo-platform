@@ -32,73 +32,11 @@ char PuyoToChar(Puyo p) {
 }
 
 class Game {
-    Grid<Puyo> grid_;
-
-    int puyo_x_;
-    int puyo_y_;
-
-    enum class PuyoConfig { Up, Right, Down, Left };
-    Puyo puyo1_;
-    Puyo puyo2_;
-    PuyoConfig puyo_config_;
-
-    int CountBlob(Grid<bool>& visited, Puyo cur_color, int x, int y) const {
-        if (visited[x][y] || grid_[x][y] != cur_color ||
-            grid_[x][y] == Puyo::None) {
-            return 0;
-        }
-        visited[x][y] = true;
-
-        int total = 1;
-        if (x > 0) {
-            total += CountBlob(visited, cur_color, x - 1, y);
-        }
-
-        if (x < GRID_COLS - 1) {
-            total += CountBlob(visited, cur_color, x + 1, y);
-        }
-
-        if (y > 0) {
-            total += CountBlob(visited, cur_color, x, y - 1);
-        }
-
-        if (y < GRID_LINES - 1) {
-            total += CountBlob(visited, cur_color, x, y + 1);
-        }
-
-        return total;
-    }
-
-    void Explode(Puyo cur_color, int x, int y) {
-        if (grid_[x][y] == Puyo::Rock) {
-            grid_[x][y] = Puyo::None;
-            return;
-        }
-
-        if (grid_[x][y] != cur_color || grid_[x][y] == Puyo::None) {
-            return;
-        }
-
-        grid_[x][y] = Puyo::None;
-
-        if (x > 0) {
-            Explode(cur_color, x - 1, y);
-        }
-
-        if (x < GRID_COLS - 1) {
-            Explode(cur_color, x + 1, y);
-        }
-
-        if (y > 0) {
-            Explode(cur_color, x, y - 1);
-        }
-
-        if (y < GRID_LINES - 1) {
-            Explode(cur_color, x, y + 1);
-        }
-    }
-
    public:
+    enum class PuyoConfig { Up, Right, Down, Left };
+
+    Game& operator=(const Game&) = default;
+
     void ReinitPuyo() {
         puyo1_ = Puyo::Red;
         puyo2_ = Puyo::Green;
@@ -351,6 +289,72 @@ class Game {
                 return "LEFT";
             default:
                 assert(false);
+        }
+    }
+
+   private:
+    Grid<Puyo> grid_;
+
+    int puyo_x_;
+    int puyo_y_;
+
+    Puyo puyo1_;
+    Puyo puyo2_;
+    PuyoConfig puyo_config_;
+
+    int CountBlob(Grid<bool>& visited, Puyo cur_color, int x, int y) const {
+        if (visited[x][y] || grid_[x][y] != cur_color ||
+            grid_[x][y] == Puyo::None) {
+            return 0;
+        }
+        visited[x][y] = true;
+
+        int total = 1;
+        if (x > 0) {
+            total += CountBlob(visited, cur_color, x - 1, y);
+        }
+
+        if (x < GRID_COLS - 1) {
+            total += CountBlob(visited, cur_color, x + 1, y);
+        }
+
+        if (y > 0) {
+            total += CountBlob(visited, cur_color, x, y - 1);
+        }
+
+        if (y < GRID_LINES - 1) {
+            total += CountBlob(visited, cur_color, x, y + 1);
+        }
+
+        return total;
+    }
+
+    void Explode(Puyo cur_color, int x, int y) {
+        if (grid_[x][y] == Puyo::Rock) {
+            grid_[x][y] = Puyo::None;
+            return;
+        }
+
+        if (grid_[x][y] != cur_color || grid_[x][y] == Puyo::None) {
+            return;
+        }
+
+        grid_[x][y] = Puyo::None;
+
+        if (x > 0) {
+            Explode(cur_color, x - 1, y);
+        }
+
+        if (x < GRID_COLS - 1) {
+            Explode(cur_color, x + 1, y);
+        }
+
+        if (y > 0) {
+            Explode(cur_color, x, y - 1);
+        }
+
+        if (y < GRID_LINES - 1) {
+            Explode(cur_color, x, y + 1);
         }
     }
 };
