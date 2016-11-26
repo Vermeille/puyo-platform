@@ -70,6 +70,11 @@ class Game {
     }
 
     void Explode(Puyo cur_color, int x, int y) {
+        if (grid_[x][y] == Puyo::Rock) {
+            grid_[x][y] = Puyo::None;
+            return;
+        }
+
         if (grid_[x][y] != cur_color || grid_[x][y] == Puyo::None) {
             return;
         }
