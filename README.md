@@ -78,7 +78,7 @@ down.
 # Example
 
 ```
-vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/new?name=a'            
+vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/new?name=a'
 3 14 UP
 B G
 |      |
@@ -99,7 +99,7 @@ B G
 |      |
 ========
 
-vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a' 
+vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a' 
 3 13 UP
 B G
 |      |
@@ -122,7 +122,7 @@ B G
 ```
 several DOWN later...
 ```
-vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a'
+vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a'
 3 14 UP
 R R
 |      |
