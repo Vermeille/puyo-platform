@@ -75,4 +75,71 @@ The player can choose one of those actions at every turn:
 Independently of the player's choices, every three steps the puyos will move
 down.
 
+# Example
 
+```
+vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/new?name=a'            
+3 14 UP
+B G
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+========
+
+vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a' 
+3 13 UP
+B G
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+========
+```
+several DOWN later...
+```
+vermeille@celadopole ~/puyoserv/build (git)-[master] % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a'
+3 14 UP
+R R
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|   G  |
+|   B  |
+========
+```
