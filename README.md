@@ -1,5 +1,7 @@
 # Puyo-Platform
 
+![turn page](puyo-screenshot.png)
+
 Puyo platform is a server intended to expose the game of puyo as an HTTP API in
 order to propose Puyo Puyo as a coding contest.
 
