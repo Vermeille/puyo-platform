@@ -207,27 +207,25 @@ int main() {
                     "Create a new Game",
                     "Name your game with a unique single-word token",
                     {{"name", "text", "Your game's name"}}},
-                [&](std::string name) {
+                [&](std::string name) -> GameFull* {
                     auto found = games.find(name);
                     if (found != games.end() && !found->second.HasLost()) {
-                        return false;
+                        return nullptr;
                     }
-                    games[name] = GameFull();
-                    return true;
+                    GameFull* g = &(games[name] = GameFull());
+                    return g;
                 },
-                [](bool success) {
-                    if (success) {
-                        return (httpi::html::Html()
-                                << "Game created successfully")
-                            .Get();
+                [](const GameFull* g) {
+                    if (g) {
+                        return g->PrintGameHTML();
                     } else {
                         return (httpi::html::Html() << "This name is invalid")
                             .Get();
                     }
                 },
-                [](bool success) {
-                    if (success) {
-                        return "OK";
+                [](const GameFull* g) -> std::string {
+                    if (g) {
+                        return g->PrintGame();
                     } else {
                         return "ERROR";
                     }

@@ -41,7 +41,7 @@ class Game {
         puyo1_ = static_cast<Puyo>(rand() % 4);
         puyo2_ = static_cast<Puyo>(rand() % 4);
         puyo_config_ = PuyoConfig::Up;
-        puyo_x_ = 3;
+        puyo_x_ = GRID_COLS / 2;
         puyo_y_ = 14;
     }
 
@@ -116,7 +116,6 @@ class Game {
                            std::begin(val[i]),
                            PuyoToChar);
         }
-        val[puyo_x_][puyo_y_] = '0';
         return val;
     }
 
