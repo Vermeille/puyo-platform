@@ -38,9 +38,9 @@ class Game {
     Game& operator=(const Game&) = default;
 
     void ReinitPuyo() {
-        puyo1_ = Puyo::Red;
-        puyo2_ = Puyo::Green;
-        puyo_config_ = PuyoConfig::Left;
+        puyo1_ = static_cast<Puyo>(rand() % 4);
+        puyo2_ = static_cast<Puyo>(rand() % 4);
+        puyo_config_ = PuyoConfig::Up;
         puyo_x_ = 3;
         puyo_y_ = 14;
     }

@@ -1,5 +1,7 @@
 #include "grid.h"
 
+#include <cstdlib>
+
 #include <sstream>
 
 #include <httpi/displayer.h>
@@ -148,8 +150,9 @@ class GameFull {
 
 int main() {
     InitHttpInterface();
-    std::map<std::string, GameFull> games;
+    srand(time(nullptr));
 
+    std::map<std::string, GameFull> games;
     RegisterUrl("/turn",
                 httpi::RestPageMaker(MakePage).AddResource(
                     "GET",
