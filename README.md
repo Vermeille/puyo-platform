@@ -5,6 +5,8 @@
 Puyo platform is a server intended to expose the game of puyo as an HTTP API in
 order to propose Puyo Puyo as a coding contest.
 
+## Solo mode
+
 Contestants have to
 
 1. Create their game on /new and name it
@@ -76,6 +78,21 @@ The player can choose one of those actions at every turn:
 
 Independently of the player's choices, every three steps the puyos will move
 down.
+
+## VS mode
+
+The server in VS mode works almost exactly the same way. The difference are:
+
+* A game is identified by a game name
+* A game knows two player names
+* both challenger must register in a game by sending the same game name and a
+  different player name to `/newvs`
+* Turns must contains the game name AND the player name. Both player must play
+  before moving to the next round. If a player tries to play twice in a round,
+  the error code `WAITING` is returned. The turns are played on the `/turnvs`
+  endpoint.
+* Players should wait 5s between each move, to avoid a server overload and give
+  enough time to make sure the opponent played too.
 
 # Example
 
