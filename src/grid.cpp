@@ -227,7 +227,7 @@ int PuyoGrid::Explode() {
 
 int PuyoGrid::chain_power(int chain) const {
     static constexpr int chain_power[] = {
-        0,   8,   16,  32,  64,  96,  128, 160, 192, 224, 256, 288,
+        0,   0,   8,   16,  32,  64,  96,  128, 160, 192, 224, 256, 288,
         320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672};
     if (chain >= 24) {
         return chain_power[23];
@@ -247,9 +247,10 @@ int PuyoGrid::ProcessCollisions() {
     AddPuyos();
     ProcessFalls();
     int total_score = 0;
-    int chain = 0;
+    int chain = 1;
     int explosions = 0;
     while ((explosions = Explode()) != 0) {
+        ++chain;
         total_score +=
             10 * explosions * (chain_power(chain) + group_bonus(explosions));
         ProcessFalls();
