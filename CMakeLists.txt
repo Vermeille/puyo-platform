@@ -12,6 +12,7 @@ target_include_directories(httpi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(puyo
     src/main.cpp
+    src/grid.cpp
     src/grid.h
     )
 

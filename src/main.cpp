@@ -28,35 +28,66 @@ std::string MakePage(const std::string& content) {
             "</head>"
             "<body lang=\"en\">"
                 "<div class=\"container\">"
-                    "<div class=\"col-md-9\">" <<
+                    "<h1>Puyo-Platform</h1>" <<
+                    Div().Attr("class", "col-md-9") <<
                         content <<
-                    "</div>"
+                    Close() <<
+                    Div().Attr("class", "col-md-3") <<
+                        Ul() <<
+                            Li() <<
+                                A().Attr("href", "/new") <<
+                                    "Create a new solo game" <<
+                                Close() <<
+                            Close() <<
+                            Li() <<
+                                A().Attr("href", "/turn") <<
+                                    "Play a turn in a solo game" <<
+                                Close() <<
+                            Close() <<
+                            Li() <<
+                                A().Attr("href", "/newvs") <<
+                                    "Create/Join a Versus game" <<
+                                Close() <<
+                            Close() <<
+                            A().Attr("href", "/turn") <<
+                                "Play a turn in a versus game" <<
+                            Close() <<
+                        Close() <<
+                    Close() <<
+                    Div().Attr("class", "col-md-12 text-right") <<
+                        Tag("footer") <<
+                            A().Attr("href", "http://github.com/Vermeille") <<
+                                "Vermeille" <<
+                            Close() <<
+                            " saved the world once again!" <<
+                        Close() <<
+                    Close() <<
                 "</div>"
             "</body>"
         "</html>").Get();
     // clang-format on
 }
 
-class GameFull {
-    Game g_;
+class Game {
+    PuyoGrid g_;
     int down_cooldown_;
     int pending_rocks_ = 0;
 
    public:
-    GameFull& operator=(const GameFull&) = default;
+    Game& operator=(const Game&) = default;
 
-    GameFull() : down_cooldown_(3) {}
+    Game() : down_cooldown_(3) {}
 
     void AddRocks(int amount) { pending_rocks_ += amount; }
 
     int GameMakeTurn(std::string cmd) {
-        Game::State state = Game::State::PlayerMove;
+        PuyoGrid::State state = PuyoGrid::State::PlayerMove;
         if (cmd == "LEFT") {
-            state = g_.Move(Game::Direction::Left);
+            state = g_.Move(PuyoGrid::Direction::Left);
         } else if (cmd == "RIGHT") {
-            state = g_.Move(Game::Direction::Right);
+            state = g_.Move(PuyoGrid::Direction::Right);
         } else if (cmd == "DOWN") {
-            state = g_.Move(Game::Direction::Down);
+            state = g_.Move(PuyoGrid::Direction::Down);
         } else if (cmd == "ROTL") {
             g_.RotateLeft();
         } else if (cmd == "ROTR") {
@@ -64,12 +95,12 @@ class GameFull {
         }
 
         --down_cooldown_;
-        if (state == Game::State::PlayerMove && down_cooldown_ == 0) {
-            state = g_.Move(Game::Direction::Down);
+        if (state == PuyoGrid::State::PlayerMove && down_cooldown_ == 0) {
+            state = g_.Move(PuyoGrid::Direction::Down);
             down_cooldown_ = 3;
         }
 
-        if (state == Game::State::ProcessCollisions) {
+        if (state == PuyoGrid::State::ProcessCollisions) {
             int score = g_.ProcessCollisions();
             if (pending_rocks_ > 30) {
                 g_.AddRocks(30);
@@ -111,6 +142,7 @@ class GameFull {
         oss << "\n";
         return oss.str();
     }
+
     std::string PrintGameHTML() const {
         if (g_.HasLost()) {
             return "YOU_LOST";
@@ -118,11 +150,11 @@ class GameFull {
 
         auto grid = g_.Print();
         grid[g_.puyo_x()][g_.puyo_y()] = PuyoToChar(g_.puyo1());
-        if (g_.puyo_config() == Game::PuyoConfig::Up) {
+        if (g_.puyo_config() == PuyoGrid::PuyoConfig::Up) {
             grid[g_.puyo_x()][g_.puyo_y() + 1] = PuyoToChar(g_.puyo2());
-        } else if (g_.puyo_config() == Game::PuyoConfig::Down) {
+        } else if (g_.puyo_config() == PuyoGrid::PuyoConfig::Down) {
             grid[g_.puyo_x()][g_.puyo_y() - 1] = PuyoToChar(g_.puyo2());
-        } else if (g_.puyo_config() == Game::PuyoConfig::Left) {
+        } else if (g_.puyo_config() == PuyoGrid::PuyoConfig::Left) {
             grid[g_.puyo_x() - 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
         } else {
             grid[g_.puyo_x() + 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
@@ -249,8 +281,8 @@ class Versus {
         return false;
     }
 
-    GameFull g1_;
-    GameFull g2_;
+    Game g1_;
+    Game g2_;
     int waiting_;
     std::string tok1_;
     std::string tok2_;
@@ -260,7 +292,7 @@ int main() {
     InitHttpInterface();
     srand(time(nullptr));
 
-    std::map<std::string, GameFull> games;
+    std::map<std::string, Game> games;
     RegisterUrl("/turn",
                 httpi::RestPageMaker(MakePage).AddResource(
                     "GET",
@@ -273,19 +305,19 @@ int main() {
                             "ROTR",  // longer description
                             {{"move", "text", "Your move choice"},
                              {"name", "text", "Your game's name"}}},
-                        [&](std::string cmd, std::string name) -> GameFull* {
+                        [&](std::string cmd, std::string name) -> Game* {
                             auto found = games.find(name);
                             if (found == games.end()) {
                                 return nullptr;
                             }
-                            GameFull* g = &found->second;
+                            Game* g = &found->second;
                             if (g->HasLost()) {
                                 return g;
                             }
                             g->GameMakeTurn(cmd);
                             return g;
                         },
-                        [&](const GameFull* g) -> std::string {
+                        [&](const Game* g) -> std::string {
                             if (!g) {
                                 return "Your game wasn't found";
                             }
@@ -294,7 +326,7 @@ int main() {
                             }
                             return g->PrintGameHTML();
                         },
-                        [&](const GameFull* g) -> std::string {
+                        [&](const Game* g) -> std::string {
                             if (!g) {
                                 return "ERROR";
                             }
@@ -315,15 +347,15 @@ int main() {
                     "Create a new Game",
                     "Name your game with a unique single-word token",
                     {{"name", "text", "Your game's name"}}},
-                [&](std::string name) -> GameFull* {
+                [&](std::string name) -> Game* {
                     auto found = games.find(name);
                     if (found != games.end() && !found->second.HasLost()) {
                         return nullptr;
                     }
-                    GameFull* g = &(games[name] = GameFull());
+                    Game* g = &(games[name] = Game());
                     return g;
                 },
-                [](const GameFull* g) {
+                [](const Game* g) {
                     if (g) {
                         return g->PrintGameHTML();
                     } else {
@@ -331,7 +363,7 @@ int main() {
                             .Get();
                     }
                 },
-                [](const GameFull* g) -> std::string {
+                [](const Game* g) -> std::string {
                     if (g) {
                         return g->PrintGame();
                     } else {
