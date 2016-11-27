@@ -14,10 +14,17 @@ class Game {
 
     void AddRocks(int amount) { pending_rocks_ += amount; }
 
-    int GameMakeTurn(const std::string& cmd) {
+    void RefreshBanTimeout() {
         auto now = std::chrono::system_clock::now();
         if (now - last_action_time_ < std::chrono::milliseconds(750)) {
             banned_ = true;
+        }
+        last_action_time_ = now;
+    }
+
+    int GameMakeTurn(const std::string& cmd) {
+        RefreshBanTimeout();
+        if (banned_) {
             return 0;
         }
 

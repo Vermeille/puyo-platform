@@ -84,16 +84,35 @@ void map_erase_if(Container& c, Pred&& p) {
         }
     }
 }
-void GarbageCollectGames(std::map<std::string, Game>& games) {
-    map_erase_if(games, [](const Game& g) { return g.HasLost(); });
-}
+
+struct GamesGarbageCollector {
+    GamesGarbageCollector(std::map<std::string, Game>& games,
+                          std::map<std::string, Versus>& versus)
+        : games_(games), versus_(versus), nb_request_since_last_gc_(0) {}
+
+    void Tick() {
+        if (++nb_request_since_last_gc_ < 10000) {
+            return;
+        }
+        map_erase_if(games_, [](const auto& g) { return g.second.HasLost(); });
+        map_erase_if(versus_,
+                     [](const auto& g) { return g.second.HasEnded(); });
+        nb_request_since_last_gc_ = 0;
+    }
+
+   private:
+    std::map<std::string, Game>& games_;
+    std::map<std::string, Versus>& versus_;
+    int nb_request_since_last_gc_;
+};
 
 int main() {
     InitHttpInterface();
     srand(time(nullptr));
 
     std::map<std::string, Game> games;
-    int nb_request_since_last_gc = 0;
+    std::map<std::string, Versus> vs_games;
+    GamesGarbageCollector gc(games, vs_games);
     RegisterUrl("/turn",
                 httpi::RestPageMaker(MakePage).AddResource(
                     "GET",
@@ -107,11 +126,7 @@ int main() {
                             {{"move", "text", "Your move choice"},
                              {"name", "text", "Your game's name"}}},
                         [&](std::string cmd, std::string name) -> Game* {
-                            if (++nb_request_since_last_gc >= 10000) {
-                                GarbageCollectGames(games);
-                                nb_request_since_last_gc = 0;
-                            }
-
+                            gc.Tick();
                             auto found = games.find(name);
                             if (found == games.end()) {
                                 return nullptr;
@@ -154,6 +169,7 @@ int main() {
                     "Name your game with a unique single-word token",
                     {{"name", "text", "Your game's name"}}},
                 [&](std::string name) -> Game* {
+                    gc.Tick();
                     auto found = games.find(name);
                     if (found != games.end() && !found->second.HasLost()) {
                         return nullptr;
@@ -177,7 +193,6 @@ int main() {
                     }
                 })));
 
-    std::map<std::string, Versus> vs_games;
     RegisterUrl(
         "/turnvs",
         httpi::RestPageMaker(MakePage).AddResource(
@@ -198,10 +213,7 @@ int main() {
                     std::string game_name,
                     std::string player_name)
                     -> std::tuple<const Versus*, std::string, bool> {
-                        if (++nb_request_since_last_gc >= 10000) {
-                            GarbageCollectGames(games);
-                            nb_request_since_last_gc = 0;
-                        }
+                        gc.Tick();
 
                         auto found = vs_games.find(game_name);
                         if (found == vs_games.end()) {
@@ -269,8 +281,9 @@ int main() {
                     "Name your game with a unique single-word token",
                     {{"game_name", "text", "Your game's name"},
                      {"player_name", "text", "Player's name"}}},
-                [&vs_games](std::string game_name, std::string player_name)
+                [&](std::string game_name, std::string player_name)
                     -> std::tuple<const Versus*, std::string> {
+                        gc.Tick();
                         auto found = vs_games.find(game_name);
                         if (found != vs_games.end()) {
                             if (!found->second.AddPlayer(player_name)) {

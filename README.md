@@ -77,6 +77,11 @@ The player can choose one of those actions at every turn:
 Independently of the player's choices, every three steps the puyos will move
 down.
 
+Note: A game is automatically lost if it hasn't been played in more than 5
+minutes. To avoid overoad, a game is automatically lost is it receives two
+requests in less than 750ms, we recommend the challenger to sleep for 1s before
+any request. Lost games are deleted undeterministically to free memory.
+
 ## VS mode
 
 The server in VS mode works almost exactly the same way. The difference are:
@@ -89,11 +94,8 @@ The server in VS mode works almost exactly the same way. The difference are:
   before moving to the next round. If a player tries to play twice in a round,
   the error code `WAITING` is returned. The turns are played on the `/turnvs`
   endpoint.
-* Players should wait 5s between each move, to avoid a server overload and give
-  enough time to make sure the opponent played too.
 
 # Example
-
 ```
 vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/new?name=a'
 3 10 UP

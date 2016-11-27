@@ -77,6 +77,7 @@ class Versus {
 
    private:
     bool Play1(std::string cmd) {
+        g1_.RefreshBanTimeout();
         if (waiting_ == 3) {
             waiting_ = 0;
         }
@@ -90,6 +91,7 @@ class Versus {
     }
 
     bool Play2(std::string cmd) {
+        g2_.RefreshBanTimeout();
         if (waiting_ == 3) {
             waiting_ = 0;
         }
