@@ -14,6 +14,8 @@ add_executable(puyo
     src/main.cpp
     src/grid.cpp
     src/grid.h
+    src/game.h
+    src/game.cpp
     )
 
 target_link_libraries(puyo httpi)

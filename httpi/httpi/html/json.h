@@ -3,14 +3,16 @@
 #include <string>
 #include <utility>
 
-std::string ToJsonString(int x) { return std::to_string(x); }
-std::string ToJsonString(double x) { return std::to_string(x); }
-std::string ToJsonString(const std::string& x) { return "\"" + x + "\""; }
+inline std::string ToJsonString(int x) { return std::to_string(x); }
+inline std::string ToJsonString(double x) { return std::to_string(x); }
+inline std::string ToJsonString(const std::string& x) {
+    return "\"" + x + "\"";
+}
 
 class JsonBuilder {
     std::string json_;
 
-  public:
+   public:
     JsonBuilder& Append(const std::string& key, int x) {
         if (!json_.empty()) {
             json_ += ", ";
@@ -75,4 +77,4 @@ class JsonBuilder {
     std::string Build() const { return "{" + json_ + "}"; }
 };
 
-std::string ToJsonString(const JsonBuilder& x) { return x.Build(); }
+inline std::string ToJsonString(const JsonBuilder& x) { return x.Build(); }

@@ -1,8 +1,4 @@
-#include "grid.h"
-
 #include <cstdlib>
-
-#include <sstream>
 
 #include <httpi/displayer.h>
 #include <httpi/html/chart.h>
@@ -11,6 +7,8 @@
 #include <httpi/job.h>
 #include <httpi/monitoring.h>
 #include <httpi/rest-helpers.h>
+
+#include "game.h"
 
 std::string MakePage(const std::string& content) {
     // clang-format off
@@ -67,129 +65,6 @@ std::string MakePage(const std::string& content) {
         "</html>").Get();
     // clang-format on
 }
-
-class Game {
-    PuyoGrid g_;
-    int down_cooldown_;
-    int pending_rocks_ = 0;
-
-   public:
-    Game& operator=(const Game&) = default;
-
-    Game() : down_cooldown_(3) {}
-
-    void AddRocks(int amount) { pending_rocks_ += amount; }
-
-    int GameMakeTurn(std::string cmd) {
-        PuyoGrid::State state = PuyoGrid::State::PlayerMove;
-        if (cmd == "LEFT") {
-            state = g_.Move(PuyoGrid::Direction::Left);
-        } else if (cmd == "RIGHT") {
-            state = g_.Move(PuyoGrid::Direction::Right);
-        } else if (cmd == "DOWN") {
-            state = g_.Move(PuyoGrid::Direction::Down);
-        } else if (cmd == "ROTL") {
-            g_.RotateLeft();
-        } else if (cmd == "ROTR") {
-            g_.RotateRight();
-        }
-
-        --down_cooldown_;
-        if (state == PuyoGrid::State::PlayerMove && down_cooldown_ == 0) {
-            state = g_.Move(PuyoGrid::Direction::Down);
-            down_cooldown_ = 3;
-        }
-
-        if (state == PuyoGrid::State::ProcessCollisions) {
-            int score = g_.ProcessCollisions();
-            if (pending_rocks_ > 30) {
-                g_.AddRocks(30);
-                pending_rocks_ -= 30;
-            } else {
-                g_.AddRocks(pending_rocks_);
-                pending_rocks_ = 0;
-            }
-            down_cooldown_ = 3;
-            return score;
-        }
-        return 0;
-    }
-
-    bool HasLost() const { return g_.HasLost(); }
-
-    std::string PrintGame() const {
-        if (g_.HasLost()) {
-            return "YOU_LOST";
-        }
-
-        std::ostringstream oss;
-        oss << g_.puyo_x() << " " << g_.puyo_y() << " "
-            << g_.puyo_config_as_str() << "\n";
-        oss << PuyoToChar(g_.puyo1()) << " " << PuyoToChar(g_.puyo2()) << "\n";
-
-        auto grid = g_.Print();
-        for (int i = 0; i < GRID_LINES; ++i) {
-            oss << "|";
-            for (int j = 0; j < GRID_COLS; ++j) {
-                oss << grid[j][GRID_LINES - i - 1];
-            }
-            oss << "|\n";
-        }
-
-        for (int j = 0; j < GRID_COLS + 2; ++j) {
-            oss << "=";
-        }
-        oss << "\n";
-        return oss.str();
-    }
-
-    std::string PrintGameHTML() const {
-        if (g_.HasLost()) {
-            return "YOU_LOST";
-        }
-
-        auto grid = g_.Print();
-        grid[g_.puyo_x()][g_.puyo_y()] = PuyoToChar(g_.puyo1());
-        if (g_.puyo_config() == PuyoGrid::PuyoConfig::Up) {
-            grid[g_.puyo_x()][g_.puyo_y() + 1] = PuyoToChar(g_.puyo2());
-        } else if (g_.puyo_config() == PuyoGrid::PuyoConfig::Down) {
-            grid[g_.puyo_x()][g_.puyo_y() - 1] = PuyoToChar(g_.puyo2());
-        } else if (g_.puyo_config() == PuyoGrid::PuyoConfig::Left) {
-            grid[g_.puyo_x() - 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
-        } else {
-            grid[g_.puyo_x() + 1][g_.puyo_y()] = PuyoToChar(g_.puyo2());
-        }
-
-        using namespace httpi::html;
-        Html html;
-        html << Table();
-
-        for (int i = 0; i < GRID_LINES; ++i) {
-            html << Tr() << Td() << "<img "
-                                    "src=\"http://files.vermeille.fr/puyo/"
-                                    "puyoWall.png\"/>";
-            html << Close();
-            for (int j = 0; j < GRID_COLS; ++j) {
-                html << Td();
-                std::string url =
-                    "<img src=\"http://files.vermeille.fr/puyo/puyo";
-                url.push_back(grid[j][GRID_LINES - i - 1]);
-                url += ".png\"/>";
-
-                html << url;
-                html << Close();
-            }
-            html << Td();
-            html << "<img src=\"http://files.vermeille.fr/puyo/"
-                    "puyoWall.png\"/>";
-            html << Close();
-            html << Close();
-        }
-
-        html << Close();
-        return html.Get();
-    }
-};
 
 class Versus {
    public:
