@@ -287,7 +287,30 @@ class Game {
             ProcessFalls();
         }
         ReinitPuyo();
-        return total_combo;
+        return total_score;
+    }
+
+    bool IsTopRowFull() const {
+        for (int c = 0; c < GRID_COLS; ++c) {
+            if (IsEmpty(c, GRID_LINES - 1)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void AddRocks(int amount) {
+        while (amount > 0 && !IsTopRowFull()) {
+            for (int c = (amount >= GRID_COLS ? 0 : rand() % GRID_COLS);
+                 c < GRID_COLS && amount > 0;
+                 ++c) {
+                if (IsEmpty(c, GRID_LINES - 1)) {
+                    grid_[c][GRID_LINES - 1] = Puyo::Rock;
+                    --amount;
+                }
+            }
+            ProcessFalls();
+        }
     }
 
     int puyo_x() const { return puyo_x_; }

@@ -40,13 +40,16 @@ std::string MakePage(const std::string& content) {
 class GameFull {
     Game g_;
     int down_cooldown_;
+    int pending_rocks_ = 0;
 
    public:
     GameFull& operator=(const GameFull&) = default;
 
     GameFull() : down_cooldown_(3) {}
 
-    void GameMakeTurn(std::string cmd) {
+    void AddRocks(int amount) { pending_rocks_ += amount; }
+
+    int GameMakeTurn(std::string cmd) {
         Game::State state = Game::State::PlayerMove;
         if (cmd == "LEFT") {
             state = g_.Move(Game::Direction::Left);
@@ -67,9 +70,18 @@ class GameFull {
         }
 
         if (state == Game::State::ProcessCollisions) {
-            g_.ProcessCollisions();
+            int score = g_.ProcessCollisions();
+            if (pending_rocks_ > 30) {
+                g_.AddRocks(30);
+                pending_rocks_ -= 30;
+            } else {
+                g_.AddRocks(pending_rocks_);
+                pending_rocks_ = 0;
+            }
             down_cooldown_ = 3;
+            return score;
         }
+        return 0;
     }
 
     bool HasLost() const { return g_.HasLost(); }
@@ -217,7 +229,7 @@ class Versus {
         }
 
         if ((waiting_ & 1) == 0) {
-            g1_.GameMakeTurn(cmd);
+            g2_.AddRocks(g1_.GameMakeTurn(cmd));
             waiting_ |= 1;
             return true;
         }
@@ -230,7 +242,7 @@ class Versus {
         }
 
         if ((waiting_ & 2) == 0) {
-            g2_.GameMakeTurn(cmd);
+            g1_.AddRocks(g2_.GameMakeTurn(cmd));
             waiting_ |= 2;
             return true;
         }
