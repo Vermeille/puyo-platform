@@ -239,7 +239,7 @@ class Game {
     }
 
     bool HasLost() const {
-        return grid_[GRID_COLS / 2][GRID_LINES - 1] != Puyo::None;
+        return grid_[GRID_COLS / 2][GRID_LINES - 2] != Puyo::None;
     }
 
     int Explode() {
