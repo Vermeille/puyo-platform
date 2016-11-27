@@ -4,7 +4,7 @@
 #include <array>
 #include <cassert>
 
-static constexpr int GRID_LINES = 16;
+static constexpr int GRID_LINES = 12;
 static constexpr int GRID_COLS = 6;
 
 enum class Puyo { Red, Green, Blue, Yellow, Rock, None };
@@ -42,7 +42,7 @@ class Game {
         puyo2_ = static_cast<Puyo>(rand() % 4);
         puyo_config_ = PuyoConfig::Up;
         puyo_x_ = GRID_COLS / 2;
-        puyo_y_ = 14;
+        puyo_y_ = GRID_LINES - 2;
     }
 
     void RotateRight() {

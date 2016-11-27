@@ -31,10 +31,10 @@ game
 where
 
 * `0 <= x_position_of_main_puyo < 6`. Leftmost is 0, rightmost is 5
-* `0 <= y_pos_of_main_puyo < 16`. Bottom is 0, top is 15
+* `0 <= y_pos_of_main_puyo < 12`. Bottom is 0, top is 15
 * `second_puyo_location` is `UP`, `RIGHT`, `DOWN` or `LEFT`
 * `main_puyo_type` and `second_puyo_type` are puyo character codes
-* `game` is an ASCII drawing of the game, a grid of 16 lines and 6 columns
+* `game` is an ASCII drawing of the game, a grid of 12 lines and 6 columns
 with delimiting `|` and `=` containing:
     * ` ` for an empty location
     * `R` for a red puyo
@@ -47,14 +47,10 @@ For instance, here is a possible output with an extra `0` to denote the main
 puyo's location which is not present is the real output
 
 ```
-2 14 UP
+2 10 UP
 R G
 |      |
 |  0   |
-|      |
-|      |
-|      |
-|      |
 |      |
 |      |
 |      |
@@ -98,12 +94,8 @@ The server in VS mode works almost exactly the same way. The difference are:
 
 ```
 vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/new?name=a'
-3 14 UP
+3 10 UP
 B G
-|      |
-|      |
-|      |
-|      |
 |      |
 |      |
 |      |
@@ -119,12 +111,8 @@ B G
 ========
 
 vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a' 
-3 13 UP
+3 9 UP
 B G
-|      |
-|      |
-|      |
-|      |
 |      |
 |      |
 |      |
@@ -142,12 +130,8 @@ B G
 several DOWN later...
 ```
 vermeille % curl -H 'Accept: text/plain' 'http://localhost:8888/turn?move=DOWN&name=a'
-3 14 UP
+3 10 UP
 R R
-|      |
-|      |
-|      |
-|      |
 |      |
 |      |
 |      |
