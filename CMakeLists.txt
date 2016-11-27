@@ -16,6 +16,7 @@ add_executable(puyo
     src/grid.h
     src/game.h
     src/game.cpp
+    src/versus.h
     )
 
 target_link_libraries(puyo httpi)
