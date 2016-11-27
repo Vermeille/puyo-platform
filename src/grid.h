@@ -23,7 +23,7 @@ char PuyoToChar(Puyo p) {
         case Puyo::Yellow:
             return 'Y';
         case Puyo::Rock:
-            return '#';
+            return 'X';
         case Puyo::None:
             return ' ';
         default:

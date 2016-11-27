@@ -41,7 +41,7 @@ with delimiting `|` and `=` containing:
     * `G` for a green puyo
     * `Y` for a yellow puyo
     * `B` for a blue puyo
-    * `#` for a rock
+    * `X` for a rock
 
 For instance, here is a possible output with an extra `0` to denote the main
 puyo's location which is not present is the real output

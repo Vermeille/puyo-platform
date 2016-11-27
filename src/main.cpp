@@ -121,13 +121,12 @@ class GameFull {
         html << Table();
 
         for (int i = 0; i < GRID_LINES; ++i) {
-            html << Tr();
-            html << Td().Attr("style", "width:32px;height:32px")
-                 << "<img src=\"http://files.vermeille.fr/puyo/"
-                    "puyoWall.png\"/>";
+            html << Tr() << Td() << "<img "
+                                    "src=\"http://files.vermeille.fr/puyo/"
+                                    "puyoWall.png\"/>";
             html << Close();
             for (int j = 0; j < GRID_COLS; ++j) {
-                html << Td().Attr("style", "width:32px;height:32px");
+                html << Td();
                 std::string url =
                     "<img src=\"http://files.vermeille.fr/puyo/puyo";
                 url.push_back(grid[j][GRID_LINES - i - 1]);
@@ -136,7 +135,7 @@ class GameFull {
                 html << url;
                 html << Close();
             }
-            html << Td().Attr("style", "width:32px;height:32px");
+            html << Td();
             html << "<img src=\"http://files.vermeille.fr/puyo/"
                     "puyoWall.png\"/>";
             html << Close();
