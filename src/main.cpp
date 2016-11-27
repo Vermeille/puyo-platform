@@ -266,6 +266,12 @@ int main() {
                     }
                 })));
 
+    RegisterUrl("/", [](const std::string&, const POSTValues&) {
+        return MakePage((httpi::html::Html() <<
+#include "landing_page_content.txt"
+                         ).Get());
+    });
+
     ServiceLoopForever();
 
     StopHttpInterface();  // clear resources<Paste>

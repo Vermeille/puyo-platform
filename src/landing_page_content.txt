@@ -1,0 +1,127 @@
+R"%(
+<p>Puyo platform is a server intended to expose the game of puyo as an HTTP API in<br />
+order to propose Puyo Puyo as a coding contest.</p>
+<h2 id="solo-mode">Solo mode</h2>
+<p>Contestants have to</p>
+<ol>
+<li>Create their game on /new and name it</li>
+<li>Play on /turn with the action they wish to do and the game's name</li>
+</ol>
+<p>Those endpoints have an HTML browser friendly interface to manually dabble with<br />
+it, but also have a parser-friendly output if queried with the header <code>Accept: text/plain</code></p>
+<p>Both of those plain text endpoints will answer with either</p>
+<p><code>ERROR</code> if something went wrong (most likely an invalid game ID), <code>LOST</code> if<br />
+you've lost the game, or an ASCII representation of the game following this<br />
+format</p>
+<pre><code>x_position_of_main_puyo  y_pos_of_main_puyo second_puyo_location
+main_puyo_type second_puyo_type
+game</code></pre>
+<p>where</p>
+<ul>
+<li><code>0 &lt;= x_position_of_main_puyo &lt; 6</code>. Leftmost is 0, rightmost is 5</li>
+<li><code>0 &lt;= y_pos_of_main_puyo &lt; 12</code>. Bottom is 0, top is 15</li>
+<li><code>second_puyo_location</code> is <code>UP</code>, <code>RIGHT</code>, <code>DOWN</code> or <code>LEFT</code></li>
+<li><code>main_puyo_type</code> and <code>second_puyo_type</code> are puyo character codes</li>
+<li><code>game</code> is an ASCII drawing of the game, a grid of 12 lines and 6 columns<br />
+with delimiting <code>|</code> and <code>=</code> containing:
+<ul>
+<li>` ` for an empty location</li>
+<li><code>R</code> for a red puyo</li>
+<li><code>G</code> for a green puyo</li>
+<li><code>Y</code> for a yellow puyo</li>
+<li><code>B</code> for a blue puyo</li>
+<li><code>X</code> for a rock</li>
+</ul></li>
+</ul>
+<p>For instance, here is a possible output with an extra <code>0</code> to denote the main<br />
+puyo's location which is not present is the real output</p>
+<pre><code>2 10 UP
+R G
+|      |
+|  0   |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|   B  |
+|   G  |
+|  RGR |
+========</code></pre>
+<p>The player can choose one of those actions at every turn:</p>
+<ul>
+<li><code>LEFT</code>: move left the main puyo</li>
+<li><code>RIGHT</code>: move right the main puyo</li>
+<li><code>DOWN</code>: move down the main puyo</li>
+<li><code>ROTR</code>: rotate the second puyo clockwise around the main puyo</li>
+<li><code>ROTL</code>: rotate the second puyo counter-clockwise around the main puyo</li>
+</ul>
+<p>Independently of the player's choices, every three steps the puyos will move<br />
+down.</p>
+<h2 id="vs-mode">VS mode</h2>
+<p>The server in VS mode works almost exactly the same way. The difference are:</p>
+<ul>
+<li>A game is identified by a game name</li>
+<li>A game knows two player names</li>
+<li>both challenger must register in a game by sending the same game name and a<br />
+different player name to <code>/newvs</code></li>
+<li>Turns must contains the game name AND the player name. Both player must play<br />
+before moving to the next round. If a player tries to play twice in a round,<br />
+the error code <code>WAITING</code> is returned. The turns are played on the <code>/turnvs</code><br />
+endpoint.</li>
+<li>Players should wait 5s between each move, to avoid a server overload and give<br />
+enough time to make sure the opponent played too.</li>
+</ul>
+<h1 id="example">Example</h1>
+<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/new?name=a&#39;
+3 10 UP
+B G
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+========
+
+vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/turn?move=DOWN&amp;name=a&#39; 
+3 9 UP
+B G
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+========</code></pre>
+<p>several DOWN later...</p>
+<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/turn?move=DOWN&amp;name=a&#39;
+3 10 UP
+R R
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|      |
+|   G  |
+|   B  |
+========</code></pre>)%"
