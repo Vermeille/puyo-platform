@@ -257,13 +257,33 @@ class Game {
         return exploded;
     }
 
+    int chain_power(int chain) const {
+        static constexpr int chain_power[] = {
+            0,   8,   16,  32,  64,  96,  128, 160, 192, 224, 256, 288,
+            320, 352, 384, 416, 448, 480, 512, 544, 576, 608, 640, 672};
+        if (chain >= 24) {
+            return chain_power[23];
+        }
+        return chain_power[chain];
+    }
+
+    int group_bonus(int explosions) const {
+        static constexpr int bonus[] = {0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 8};
+        if (explosions >= 11) {
+            return bonus[11];
+        }
+        return bonus[explosions];
+    }
+
     int ProcessCollisions() {
         AddPuyos();
         ProcessFalls();
-        int total_combo = 0;
+        int total_score = 0;
+        int chain = 0;
         int explosions = 0;
         while ((explosions = Explode()) != 0) {
-            total_combo += explosions;
+            total_score += 10 * explosions *
+                           (chain_power(chain) + group_bonus(explosions));
             ProcessFalls();
         }
         ReinitPuyo();
