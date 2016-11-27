@@ -74,11 +74,26 @@ std::string MakePage(const std::string& content) {
     // clang-format on
 }
 
+template <class Container, class Pred>
+void map_erase_if(Container& c, Pred&& p) {
+    for (auto it = c.begin(), end = c.end(); it != end;) {
+        if (p(*it)) {
+            it = c.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+void GarbageCollectGames(std::map<std::string, Game>& games) {
+    map_erase_if(games, [](const Game& g) { return g.HasLost(); });
+}
+
 int main() {
     InitHttpInterface();
     srand(time(nullptr));
 
     std::map<std::string, Game> games;
+    int nb_request_since_last_gc = 0;
     RegisterUrl("/turn",
                 httpi::RestPageMaker(MakePage).AddResource(
                     "GET",
@@ -92,6 +107,11 @@ int main() {
                             {{"move", "text", "Your move choice"},
                              {"name", "text", "Your game's name"}}},
                         [&](std::string cmd, std::string name) -> Game* {
+                            if (++nb_request_since_last_gc >= 10000) {
+                                GarbageCollectGames(games);
+                                nb_request_since_last_gc = 0;
+                            }
+
                             auto found = games.find(name);
                             if (found == games.end()) {
                                 return nullptr;
@@ -178,6 +198,11 @@ int main() {
                     std::string game_name,
                     std::string player_name)
                     -> std::tuple<const Versus*, std::string, bool> {
+                        if (++nb_request_since_last_gc >= 10000) {
+                            GarbageCollectGames(games);
+                            nb_request_since_last_gc = 0;
+                        }
+
                         auto found = vs_games.find(game_name);
                         if (found == vs_games.end()) {
                             return std::make_tuple(nullptr, player_name, false);

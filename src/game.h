@@ -1,15 +1,26 @@
 #pragma once
 
+#include <chrono>
+
 #include "grid.h"
 
 class Game {
    public:
     Game& operator=(const Game&) = default;
-    Game() : down_cooldown_(3) {}
+    Game()
+        : down_cooldown_(3),
+          last_action_time_(std::chrono::system_clock::now()),
+          banned_(false) {}
 
     void AddRocks(int amount) { pending_rocks_ += amount; }
 
     int GameMakeTurn(const std::string& cmd) {
+        auto now = std::chrono::system_clock::now();
+        if (now - last_action_time_ < std::chrono::milliseconds(750)) {
+            banned_ = true;
+            return 0;
+        }
+
         auto state = ApplyMove(cmd);
 
         --down_cooldown_;
@@ -25,7 +36,11 @@ class Game {
         return 0;
     }
 
-    bool HasLost() const { return g_.HasLost(); }
+    bool HasLost() const {
+        return banned_ || g_.HasLost() ||
+               (std::chrono::system_clock::now() - last_action_time_ >
+                std::chrono::minutes(5));
+    }
 
     std::string PrintGame() const;
 
@@ -38,4 +53,6 @@ class Game {
     PuyoGrid g_;
     int down_cooldown_;
     int pending_rocks_ = 0;
+    std::chrono::system_clock::time_point last_action_time_;
+    bool banned_;
 };
