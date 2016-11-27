@@ -148,6 +148,103 @@ class GameFull {
     }
 };
 
+class Versus {
+   public:
+    Versus& operator=(const Versus&) = default;
+
+    bool HasEnded() const { return g1_.HasLost() || g2_.HasLost(); }
+
+    bool IsPlayer(const std::string& tok) const {
+        return tok == tok1_ || tok == tok2_;
+    }
+
+    bool HasWon(const std::string& tok) const {
+        if (tok == tok1_) {
+            return !g1_.HasLost() && g2_.HasLost();
+        }
+        if (tok == tok2_) {
+            return g1_.HasLost() && !g2_.HasLost();
+        }
+        return false;
+    }
+
+    bool Play(const std::string& cmd, const std::string& tok) {
+        if (tok == tok1_) {
+            return Play1(cmd);
+        } else if (tok == tok2_) {
+            return Play2(cmd);
+        }
+        return false;
+    }
+
+    std::string PrintGameFor(const std::string& tok) const {
+        if (tok == tok1_) {
+            return g1_.PrintGame();
+        } else if (tok == tok2_) {
+            return g2_.PrintGame();
+        }
+        return "ERROR";
+    }
+
+    std::string PrintGameHTML() const {
+        using namespace httpi::html;
+        // clang-format off
+        return (Html()
+                << Table()
+                    << Tr()
+                        << Td() << g1_.PrintGameHTML() << Close()
+                        << Td() << g2_.PrintGameHTML() << Close()
+                    << Close()
+                << Close()).Get();
+        // clang-format on
+    }
+
+    bool AddPlayer(std::string tok) {
+        if (tok1_.empty() && tok2_ != tok) {
+            tok1_ = std::move(tok);
+            return true;
+        }
+        if (tok2_.empty() && tok1_ != tok) {
+            tok2_ = std::move(tok);
+            return true;
+        }
+        return false;
+    }
+
+   private:
+    bool Play1(std::string cmd) {
+        if (waiting_ == 3) {
+            waiting_ = 0;
+        }
+
+        if ((waiting_ & 1) == 0) {
+            g1_.GameMakeTurn(cmd);
+            waiting_ |= 1;
+            return true;
+        }
+        return false;
+    }
+
+    bool Play2(std::string cmd) {
+        if (waiting_ == 3) {
+            waiting_ = 0;
+        }
+
+        if ((waiting_ & 2) == 0) {
+            g2_.GameMakeTurn(cmd);
+            waiting_ |= 2;
+            return true;
+        }
+        return false;
+    }
+
+    GameFull g1_;
+    GameFull g2_;
+    int waiting_;
+    std::string tok1_;
+    std::string tok2_;
+};
+
 int main() {
     InitHttpInterface();
     srand(time(nullptr));
@@ -226,6 +323,122 @@ int main() {
                 [](const GameFull* g) -> std::string {
                     if (g) {
                         return g->PrintGame();
+                    } else {
+                        return "ERROR";
+                    }
+                })));
+
+    std::map<std::string, Versus> vs_games;
+    RegisterUrl(
+        "/turnvs",
+        httpi::RestPageMaker(MakePage).AddResource(
+            "GET",
+            httpi::RestResource(
+                httpi::html::FormDescriptor<std::string,
+                                            std::string,
+                                            std::string>{
+                    "GET",
+                    "/turnvs",
+                    "Make your next move",  // name
+                    "Make your next move. LEFT, DOWN, RIGHT, ROTL or "
+                    "ROTR",  // longer description
+                    {{"move", "text", "Your move choice"},
+                     {"game_name", "text", "Your game's name"},
+                     {"player_name", "text", "Your player's name"}}},
+                [&](std::string cmd,
+                    std::string game_name,
+                    std::string player_name)
+                    -> std::tuple<const Versus*, std::string, bool> {
+                        auto found = vs_games.find(game_name);
+                        if (found == vs_games.end()) {
+                            return std::make_tuple(nullptr, player_name, false);
+                        }
+                        Versus* g = &found->second;
+                        if (g->HasEnded()) {
+                            return std::make_tuple(g, player_name, false);
+                        }
+                        bool has_played = g->Play(cmd, player_name);
+                        return std::make_tuple(g, player_name, has_played);
+                    },
+                [](const Versus* g, std::string player, bool has_played)
+                    -> std::string {
+                        if (!g) {
+                            return "Your game wasn't found";
+                        }
+
+                        if (!g->IsPlayer(player)) {
+                            return "NOT_PLAYER";
+                        }
+
+                        if (g->HasEnded()) {
+                            if (g->HasWon(player)) {
+                                return "WON";
+                            }
+                            return "LOST";
+                        }
+                        if (!has_played) {
+                            return "WAITING";
+                        }
+                        return g->PrintGameHTML();
+                    },
+                [](const Versus* g, std::string player, bool has_played)
+                    -> std::string {
+                        if (!g) {
+                            return "ERROR";
+                        }
+
+                        if (!g->IsPlayer(player)) {
+                            return "NOT_PLAYER";
+                        }
+
+                        if (g->HasEnded()) {
+                            if (g->HasWon(player)) {
+                                return "WON";
+                            }
+                            return "LOST";
+                        }
+                        if (!has_played) {
+                            return "WAITING";
+                        }
+                        return g->PrintGameFor(player);
+                    })));
+
+    RegisterUrl(
+        "/newvs",
+        httpi::RestPageMaker(MakePage).AddResource(
+            "GET",
+            httpi::RestResource(
+                httpi::html::FormDescriptor<std::string, std::string>{
+                    "GET",
+                    "/newvs",
+                    "Create a new Game",
+                    "Name your game with a unique single-word token",
+                    {{"game_name", "text", "Your game's name"},
+                     {"player_name", "text", "Player's name"}}},
+                [&vs_games](std::string game_name, std::string player_name)
+                    -> std::tuple<const Versus*, std::string> {
+                        auto found = vs_games.find(game_name);
+                        if (found != vs_games.end()) {
+                            if (!found->second.AddPlayer(player_name)) {
+                                return std::make_pair(nullptr, player_name);
+                            }
+                            return std::make_pair(&found->second, player_name);
+                        }
+                        Versus* g = &(vs_games[game_name] = Versus());
+                        g->AddPlayer(player_name);
+                        return std::make_pair(g, player_name);
+                    },
+                [](const Versus* g, std::string) {
+                    if (g) {
+                        return g->PrintGameHTML();
+                    } else {
+                        return (httpi::html::Html() << "This name is invalid")
+                            .Get();
+                    }
+                },
+                [](const Versus* g, std::string player_name) -> std::string {
+                    if (g) {
+                        return g->PrintGameFor(player_name);
                     } else {
                         return "ERROR";
                     }
