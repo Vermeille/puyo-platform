@@ -5,6 +5,8 @@
 Puyo platform is a server intended to expose the game of puyo as an HTTP API in
 order to propose Puyo Puyo as a coding contest.
 
+Demonstration: currently running at [https://puyopuyo.vermeille.fr](https://puyopuyo.vermeille.fr)
+
 ## Solo mode
 
 Contestants have to
