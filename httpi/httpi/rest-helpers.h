@@ -21,6 +21,10 @@ auto CurryCall(F&& f, const std::tuple<Args...>& args) {
     return CurryCallImpl(f, args, std::index_sequence_for<Args...>());
 }
 
+template <class F, class Arg>
+auto CurryCall(F&& f, const Arg& args) {
+    return f(args);
+}
 }  // anonymous
 
 class RestResource {
@@ -65,7 +69,7 @@ class RestResource {
             if (!args.second.empty()) {
                 html << ErrorsToHtml(args.second);
             } else {
-                html << html_(CurryCall(exec_, args.first));
+                html << CurryCall(html_, CurryCall(exec_, args.first));
             }
             return html.Get();
         }
@@ -75,7 +79,7 @@ class RestResource {
             if (!args.second.empty()) {
                 return ErrorsToHtml(args.second).Get();
             } else {
-                return json_(CurryCall(exec_, args.first));
+                return CurryCall(json_, CurryCall(exec_, args.first));
             }
         }
 
