@@ -34,6 +34,11 @@ std::string MakePage(const std::string& content) {
                     Div().Attr("class", "col-md-3") <<
                         Ul() <<
                             Li() <<
+                                A().Attr("href", "/") <<
+                                    "How to / manual" <<
+                                Close() <<
+                            Close() <<
+                            Li() <<
                                 A().Attr("href", "/new") <<
                                     "Create a new solo game" <<
                                 Close() <<
@@ -48,8 +53,10 @@ std::string MakePage(const std::string& content) {
                                     "Create/Join a Versus game" <<
                                 Close() <<
                             Close() <<
-                            A().Attr("href", "/turn") <<
-                                "Play a turn in a versus game" <<
+                            Li() <<
+                                A().Attr("href", "/turn") <<
+                                    "Play a turn in a versus game" <<
+                                Close() <<
                             Close() <<
                         Close() <<
                     Close() <<
