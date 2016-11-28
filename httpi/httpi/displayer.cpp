@@ -150,10 +150,16 @@ void ServiceLoopForever() {
 }
 
 bool InitHttpInterface() {
-    g_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY, FLAGS_port, NULL, NULL,
-            &answer_to_connection, NULL, MHD_OPTION_END,
-            MHD_OPTION_NOTIFY_COMPLETED, request_completed,
-            NULL, MHD_OPTION_END);
+    g_daemon = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY,
+                                FLAGS_port,
+                                NULL,
+                                NULL,
+                                &answer_to_connection,
+                                NULL,
+                                MHD_OPTION_NOTIFY_COMPLETED,
+                                request_completed,
+                                NULL,
+                                MHD_OPTION_END);
 
     signal(SIGINT, handle_sigint);
 
