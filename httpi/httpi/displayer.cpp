@@ -33,6 +33,8 @@ struct ConnInfo {
     MHD_PostProcessor* post;
     std::string page;
     POSTValues args;
+
+    ConnInfo() : post(nullptr) {}
 };
 
 static void request_completed(void* /* cls */,
