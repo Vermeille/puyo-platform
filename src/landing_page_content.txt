@@ -1,6 +1,8 @@
 R"%(
 <p>Puyo platform is a server intended to expose the game of puyo as an HTTP API in
 order to propose Puyo Puyo as a coding contest.</p>
+<p>The contest Nuit de l'Info is happening right now! find the subject <a
+href="https://files.vermeille.fr/puyosubject.pdf">right here</a></p>
 <h2 id="solo-mode">Solo mode</h2>
 <p>Contestants have to</p>
 <ol>
@@ -79,7 +81,8 @@ endpoint.</li>
 enough time to make sure the opponent played too.</li>
 </ul>
 <h1 id="example">Example</h1>
-<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/new?name=a&#39;
+<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39;
+&#39;https://puyopuyo.vermeille.fr/new?name=a&#39;
 3 10 UP
 B G
 |      |
@@ -96,7 +99,8 @@ B G
 |      |
 ========
 
-vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/turn?move=DOWN&amp;name=a&#39; 
+vermeille % curl -H &#39;Accept: text/plain&#39;
+&#39;https://puyopuyo.vermeille.fr/turn?move=DOWN&amp;name=a&#39; 
 3 9 UP
 B G
 |      |
@@ -113,7 +117,8 @@ B G
 |      |
 ========</code></pre>
 <p>several DOWN later...</p>
-<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39; &#39;http://localhost:8888/turn?move=DOWN&amp;name=a&#39;
+<pre><code>vermeille % curl -H &#39;Accept: text/plain&#39;
+&#39;https://puyopuyo.vermeille.fr/turn?move=DOWN&amp;name=a&#39;
 3 10 UP
 R R
 |      |

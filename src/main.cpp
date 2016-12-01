@@ -54,7 +54,7 @@ std::string MakePage(const std::string& content) {
                                 Close() <<
                             Close() <<
                             Li() <<
-                                A().Attr("href", "/turn") <<
+                                A().Attr("href", "/turnvs") <<
                                     "Play a turn in a versus game" <<
                                 Close() <<
                             Close() <<
