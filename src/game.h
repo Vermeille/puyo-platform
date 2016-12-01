@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <iostream>
 
 #include "grid.h"
 
@@ -45,6 +46,12 @@ class Game {
     }
 
     bool HasLost() const {
+        if (banned_) {
+            std::cerr << "banned\n";
+        }
+        if (g_.HasLost()) {
+            std::cerr << "game failed\n";
+        }
         return banned_ || g_.HasLost() ||
                (std::chrono::system_clock::now() - last_action_time_ >
                 std::chrono::minutes(5));

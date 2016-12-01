@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 
 #include <httpi/displayer.h>
@@ -16,7 +17,18 @@ class Versus {
    public:
     Versus& operator=(const Versus&) = default;
 
-    bool HasEnded() const { return g1_.HasLost() || g2_.HasLost(); }
+    bool HasEnded() const {
+        bool g1_lost = g1_.HasLost();
+        bool g2_lost = g2_.HasLost();
+        if (g1_lost) {
+            std::cerr << "p1 " << tok1_ << " lost in\n";
+        }
+
+        if (g1_lost) {
+            std::cerr << "p1 " << tok1_ << " lost in\n";
+        }
+        return g1_lost || g2_lost;
+    }
 
     bool IsPlayer(const std::string& tok) const {
         return tok == tok1_ || tok == tok2_;
@@ -77,7 +89,6 @@ class Versus {
 
    private:
     bool Play1(std::string cmd) {
-        g1_.RefreshBanTimeout();
         if (waiting_ == 3) {
             waiting_ = 0;
         }
@@ -87,11 +98,11 @@ class Versus {
             waiting_ |= 1;
             return true;
         }
+        g1_.RefreshBanTimeout();
         return false;
     }
 
     bool Play2(std::string cmd) {
-        g2_.RefreshBanTimeout();
         if (waiting_ == 3) {
             waiting_ = 0;
         }
@@ -101,6 +112,7 @@ class Versus {
             waiting_ |= 2;
             return true;
         }
+        g2_.RefreshBanTimeout();
         return false;
     }
 
