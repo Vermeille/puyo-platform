@@ -1,4 +1,5 @@
 #include <cstdlib>
+#include <iostream>
 
 #include <httpi/displayer.h>
 #include <httpi/html/chart.h>
@@ -94,6 +95,7 @@ struct GamesGarbageCollector {
         if (++nb_request_since_last_gc_ < 10000) {
             return;
         }
+        std::cerr << "GARBAGE COLLECTION\n";
         map_erase_if(games_, [](const auto& g) { return g.second.HasLost(); });
         map_erase_if(versus_,
                      [](const auto& g) { return g.second.HasEnded(); });
@@ -127,6 +129,7 @@ int main() {
                              {"name", "text", "Your game's name"}}},
                         [&](std::string cmd, std::string name) -> Game* {
                             gc.Tick();
+                            std::cerr << "/turn " << cmd << " " << name << "\n";
                             auto found = games.find(name);
                             if (found == games.end()) {
                                 return nullptr;
@@ -140,20 +143,26 @@ int main() {
                         },
                         [&](const Game* g) -> std::string {
                             if (!g) {
+                                std::cerr << "Your game wasn't found\n";
                                 return "Your game wasn't found";
                             }
                             if (g->HasLost()) {
+                                std::cerr << "LOST\n";
                                 return "LOST";
                             }
+                            std::cerr << g->PrintGame() << "\n";
                             return g->PrintGameHTML();
                         },
                         [&](const Game* g) -> std::string {
                             if (!g) {
+                                std::cerr << "ERROR\n";
                                 return "ERROR";
                             }
                             if (g->HasLost()) {
+                                std::cerr << "LOST\n";
                                 return "LOST";
                             }
+                            std::cerr << g->PrintGame() << "\n";
                             return g->PrintGame();
                         })));
 
@@ -170,6 +179,7 @@ int main() {
                     {{"name", "text", "Your game's name"}}},
                 [&](std::string name) -> Game* {
                     gc.Tick();
+                    std::cerr << "/new " << name << "\n";
                     auto found = games.find(name);
                     if (found != games.end() && !found->second.HasLost()) {
                         return nullptr;
@@ -179,16 +189,20 @@ int main() {
                 },
                 [](const Game* g) {
                     if (g) {
+                        std::cerr << g->PrintGame() << "\n";
                         return g->PrintGameHTML();
                     } else {
+                        std::cerr << "invalid name\n";
                         return (httpi::html::Html() << "This name is invalid")
                             .Get();
                     }
                 },
                 [](const Game* g) -> std::string {
                     if (g) {
+                        std::cerr << g->PrintGame() << "\n";
                         return g->PrintGame();
                     } else {
+                        std::cerr << "ERROR\n";
                         return "ERROR";
                     }
                 })));
@@ -215,6 +229,7 @@ int main() {
                     -> std::tuple<const Versus*, std::string, bool> {
                         gc.Tick();
 
+                        std::cerr << "/turn " << cmd << " " << game_name << " " << player_name << "\n";
                         auto found = vs_games.find(game_name);
                         if (found == vs_games.end()) {
                             return std::make_tuple(nullptr, player_name, false);
@@ -229,43 +244,54 @@ int main() {
                 [](const Versus* g, std::string player, bool has_played)
                     -> std::string {
                         if (!g) {
+                            std::cerr << "NOT FOUND\n";
                             return "Your game wasn't found";
                         }
 
                         if (!g->IsPlayer(player)) {
+                            std::cerr << "NOT_PLAYER\n";
                             return "NOT_PLAYER";
                         }
 
                         if (g->HasEnded()) {
                             if (g->HasWon(player)) {
+                                std::cerr << "WON\n";
                                 return "WON";
                             }
+                            std::cerr << "LOST\n";
                             return "LOST";
                         }
                         if (!has_played) {
+                            std::cerr << "WAITING\n";
                             return "WAITING";
                         }
+                        std::cerr << g->PrintGameFor(player) << "\n";
                         return g->PrintGameHTML();
                     },
                 [](const Versus* g, std::string player, bool has_played)
                     -> std::string {
                         if (!g) {
+                            std::cerr << "ERROR\n";
                             return "ERROR";
                         }
 
                         if (!g->IsPlayer(player)) {
+                            std::cerr << "NOT_PLAYER\n";
                             return "NOT_PLAYER";
                         }
 
                         if (g->HasEnded()) {
                             if (g->HasWon(player)) {
+                                std::cerr << "WON\n";
                                 return "WON";
                             }
+                            std::cerr << "LOST\n";
                             return "LOST";
                         }
                         if (!has_played) {
                             return "WAITING";
                         }
+                        std::cerr << g->PrintGameFor(player) << "\n";
                         return g->PrintGameFor(player);
                     })));
 
@@ -284,6 +310,7 @@ int main() {
                 [&](std::string game_name, std::string player_name)
                     -> std::tuple<const Versus*, std::string> {
                         gc.Tick();
+                        std::cerr << "/newvs " << game_name << " " << player_name << "\n";
                         auto found = vs_games.find(game_name);
                         if (found != vs_games.end()) {
                             if (!found->second.AddPlayer(player_name)) {
@@ -295,18 +322,22 @@ int main() {
                         g->AddPlayer(player_name);
                         return std::make_pair(g, player_name);
                     },
-                [](const Versus* g, std::string) {
+                [](const Versus* g, std::string name) {
                     if (g) {
+                        std::cerr << g->PrintGameFor(name) << "\n";
                         return g->PrintGameHTML();
                     } else {
+                        std::cerr << "INVALID NAME\n";
                         return (httpi::html::Html() << "This name is invalid")
                             .Get();
                     }
                 },
                 [](const Versus* g, std::string player_name) -> std::string {
                     if (g) {
+                        std::cerr << g->PrintGameFor(player_name) << "\n";
                         return g->PrintGameFor(player_name);
                     } else {
+                        std::cerr << "ERROR\n";
                         return "ERROR";
                     }
                 })));
