@@ -48,19 +48,7 @@ std::string Game::PrintGame() const {
         << "\n";
     oss << PuyoToChar(g_.puyo1()) << " " << PuyoToChar(g_.puyo2()) << "\n";
 
-    auto grid = g_.Print();
-    for (int i = 0; i < GRID_LINES; ++i) {
-        oss << "|";
-        for (int j = 0; j < GRID_COLS; ++j) {
-            oss << grid[j][GRID_LINES - i - 1];
-        }
-        oss << "|\n";
-    }
-
-    for (int j = 0; j < GRID_COLS + 2; ++j) {
-        oss << "=";
-    }
-    oss << "\n";
+    oss << g_.PrintStr();
     return oss.str();
 }
 

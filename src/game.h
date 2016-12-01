@@ -38,6 +38,7 @@ class Game {
 
         if (state == PuyoGrid::State::ProcessCollisions) {
             down_cooldown_ = 3;
+            g_.AddPuyos();
             return ProcessRocksAndPhysics();
         }
         return 0;

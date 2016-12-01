@@ -1,5 +1,7 @@
 #include "grid.h"
 
+#include <sstream>
+
 char PuyoToChar(Puyo p) {
     switch (p) {
         case Puyo::Red:
@@ -19,11 +21,38 @@ char PuyoToChar(Puyo p) {
     }
 }
 
+Puyo CharToPuyo(char p) {
+    switch (p) {
+        case 'R':
+            return Puyo::Red;
+        case 'G':
+            return Puyo::Green;
+        case 'B':
+            return Puyo::Blue;
+        case 'Y':
+            return Puyo::Yellow;
+        case 'X':
+            return Puyo::Rock;
+        case ' ':
+            return Puyo::None;
+        default:
+            assert(false);
+    }
+}
+
 PuyoGrid::PuyoGrid() {
     for (auto& i : grid_) {
-        for (auto& j : i) {
-            j = Puyo::None;
-        }
+        i.fill(Puyo::None);
+    }
+    ReinitPuyo();
+}
+
+PuyoGrid::PuyoGrid(const Grid<char>& char_map) {
+    for (size_t i = 0; i < grid_.size(); ++i) {
+        std::transform(std::begin(char_map[i]),
+                       std::end(char_map[i]),
+                       std::begin(grid_[i]),
+                       CharToPuyo);
     }
     ReinitPuyo();
 }
@@ -99,6 +128,23 @@ Grid<char> PuyoGrid::Print() const {
                        PuyoToChar);
     }
     return val;
+}
+
+std::string PuyoGrid::PrintStr() const {
+    std::ostringstream oss;
+    for (int i = 0; i < GRID_LINES; ++i) {
+        oss << "|";
+        for (int j = 0; j < GRID_COLS; ++j) {
+            oss << PuyoToChar(grid_[j][GRID_LINES - i - 1]);
+        }
+        oss << "|\n";
+    }
+
+    for (int j = 0; j < GRID_COLS + 2; ++j) {
+        oss << "=";
+    }
+    oss << "\n";
+    return oss.str();
 }
 
 bool PuyoGrid::CanMoveRight() const {
@@ -186,20 +232,21 @@ void PuyoGrid::AddPuyos() {
         case PuyoConfig::Up:
             assert(IsEmpty(puyo_x_, puyo_y_ + 1));
             grid_[puyo_x_][puyo_y_ + 1] = puyo2_;
-            return;
+            break;
         case PuyoConfig::Down:
             assert(IsEmpty(puyo_x_, puyo_y_ - 1));
             grid_[puyo_x_][puyo_y_ - 1] = puyo2_;
-            return;
+            break;
         case PuyoConfig::Left:
             assert(IsEmpty(puyo_x_ - 1, puyo_y_));
             grid_[puyo_x_ - 1][puyo_y_] = puyo2_;
-            return;
+            break;
         case PuyoConfig::Right:
             assert(IsEmpty(puyo_x_ + 1, puyo_y_));
             grid_[puyo_x_ + 1][puyo_y_] = puyo2_;
-            return;
+            break;
     }
+    ProcessFalls();
 }
 
 void PuyoGrid::ProcessFalls() {
@@ -217,8 +264,7 @@ int PuyoGrid::Explode() {
     for (int i = 0; i < GRID_LINES; ++i) {
         for (int j = 0; j < GRID_COLS; ++j) {
             if (CountBlob(visited, grid_[j][i], j, i) >= 4) {
-                Explode(grid_[j][i], j, i);
-                ++exploded;
+                exploded += Explode(grid_[j][i], j, i);
             }
         }
     }
@@ -244,10 +290,8 @@ int PuyoGrid::group_bonus(int explosions) const {
 }
 
 int PuyoGrid::ProcessCollisions() {
-    AddPuyos();
-    ProcessFalls();
     int total_score = 0;
-    int chain = 1;
+    int chain = 0;
     int explosions = 0;
     while ((explosions = Explode()) != 0) {
         ++chain;
@@ -256,7 +300,7 @@ int PuyoGrid::ProcessCollisions() {
         ProcessFalls();
     }
     ReinitPuyo();
-    return total_score;
+    return total_score / 70;
 }
 
 void PuyoGrid::AddRocks(int amount) {
@@ -318,31 +362,33 @@ int PuyoGrid::CountBlob(Grid<bool>& visited,
     return total;
 }
 
-void PuyoGrid::Explode(Puyo cur_color, int x, int y) {
+int PuyoGrid::Explode(Puyo cur_color, int x, int y) {
     if (grid_[x][y] == Puyo::Rock) {
         grid_[x][y] = Puyo::None;
-        return;
+        return 0;
     }
 
     if (grid_[x][y] != cur_color || grid_[x][y] == Puyo::None) {
-        return;
+        return 0;
     }
 
+    int exploded = 1;
     grid_[x][y] = Puyo::None;
 
     if (x > 0) {
-        Explode(cur_color, x - 1, y);
+        exploded += Explode(cur_color, x - 1, y);
     }
 
     if (x < GRID_COLS - 1) {
-        Explode(cur_color, x + 1, y);
+        exploded += Explode(cur_color, x + 1, y);
     }
 
     if (y > 0) {
-        Explode(cur_color, x, y - 1);
+        exploded += Explode(cur_color, x, y - 1);
     }
 
     if (y < GRID_LINES - 1) {
-        Explode(cur_color, x, y + 1);
+        exploded += Explode(cur_color, x, y + 1);
     }
+    return exploded;
 }

@@ -10,8 +10,7 @@ add_subdirectory(httpi)
 
 target_include_directories(httpi PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(puyo
-    src/main.cpp
+set(puyo_src
     src/grid.cpp
     src/grid.h
     src/game.h
@@ -19,4 +18,17 @@ add_executable(puyo
     src/versus.h
     )
 
+add_executable(puyo
+    ${puyo_src}
+    src/main.cpp
+    )
+
+
+add_executable(puyo_test
+    src/grid.cpp
+    src/grid.h
+    tests/tests.cpp
+    )
+
 target_link_libraries(puyo httpi)
+target_link_libraries(puyo_test httpi)

@@ -13,6 +13,7 @@ template <class T>
 using Grid = std::array<std::array<T, GRID_LINES>, GRID_COLS>;
 
 char PuyoToChar(Puyo p);
+Puyo CharToPuyo(char p);
 
 class PuyoGrid {
    public:
@@ -22,6 +23,7 @@ class PuyoGrid {
 
     PuyoGrid& operator=(const PuyoGrid&) = default;
     PuyoGrid();
+    PuyoGrid(const Grid<char>&);
 
     bool HasLost() const {
         return grid_[GRID_COLS / 2][GRID_LINES - 2] != Puyo::None;
@@ -31,6 +33,7 @@ class PuyoGrid {
     void RotateLeft();
 
     Grid<char> Print() const;
+    std::string PrintStr() const;
 
     State Move(Direction dir);
 
@@ -45,11 +48,11 @@ class PuyoGrid {
     PuyoConfig puyo_config() const { return puyo_config_; }
     std::string puyo_config_as_str() const;
 
-   private:
-    void AddPuyos();
     void ProcessFalls();
     int Explode();
+    void AddPuyos();
 
+   private:
     int chain_power(int chain) const;
     int group_bonus(int explosions) const;
 
@@ -76,7 +79,7 @@ class PuyoGrid {
 
     int CountBlob(Grid<bool>& visited, Puyo cur_color, int x, int y) const;
 
-    void Explode(Puyo cur_color, int x, int y);
+    int Explode(Puyo cur_color, int x, int y);
 
     Grid<Puyo> grid_;
 
